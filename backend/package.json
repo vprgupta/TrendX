@@ -1,0 +1,17 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "Flutter",
+    "app",
+    "backend"
+  ],
+  "license": "ISC",
+  "author": "Pratik Mahara",
+  "type": "modulejs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
