@@ -14,8 +14,6 @@ class PlatformFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
     return Column(
       children: [
         Container(
@@ -25,8 +23,8 @@ class PlatformFeed extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                _getPlatformColor(platformName).withOpacity(0.8),
-                _getPlatformColor(platformName).withOpacity(0.6),
+                _getPlatformColor(platformName).withValues(alpha: 0.8),
+                _getPlatformColor(platformName).withValues(alpha: 0.6),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -34,7 +32,7 @@ class PlatformFeed extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: _getPlatformColor(platformName).withOpacity(0.3),
+                color: _getPlatformColor(platformName).withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -46,10 +44,10 @@ class PlatformFeed extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -67,7 +65,7 @@ class PlatformFeed extends StatelessWidget {
                   color: Colors.white,
                   shadows: [
                     Shadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       offset: const Offset(0, 1),
                       blurRadius: 2,
                     ),

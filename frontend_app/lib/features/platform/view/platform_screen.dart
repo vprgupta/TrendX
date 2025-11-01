@@ -59,31 +59,64 @@ class _PlatformScreenState extends State<PlatformScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Trending Platforms',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                children: [
+                  ShaderMask(
+                    shaderCallback: (bounds) => const LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFEC4899)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ).createShader(bounds),
+                    child: Text(
+                      'TrendX',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        color: Colors.black,
+                        fontFamily: '.SF Pro Display',
+                        height: 1.0,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.tune_rounded,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        size: 22,
+                      ),
+                      onSelected: (value) {
+                        _prefsService.updateCountryFilter(value);
+                      },
+                      itemBuilder: (context) => _countries.entries.map((entry) {
+                        return PopupMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
-            onSelected: (value) {
-              _prefsService.updateCountryFilter(value);
-            },
-            itemBuilder: (context) => _countries.entries.map((entry) {
-              return PopupMenuItem(
-                value: entry.key,
-                child: Text(entry.value),
-              );
-            }).toList(),
-          ),
-        ],
       ),
       body: ListView.builder(
               padding: const EdgeInsets.all(16),
