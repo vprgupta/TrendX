@@ -36,7 +36,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
 
   final List<NavItem> _navItems = [
     NavItem(Icons.apps_outlined, Icons.apps, 'Platform', Colors.blue),
-    NavItem(Icons.article_outlined, Icons.article, 'News', Colors.red),
+    NavItem(Icons.article_outlined, Icons.article, 'Shorts', Colors.red),
     NavItem(Icons.flag_outlined, Icons.flag, 'Country', Colors.green),
     NavItem(Icons.public_outlined, Icons.public, 'World', Colors.purple),
     NavItem(Icons.computer_outlined, Icons.computer, 'Technology', Colors.orange),

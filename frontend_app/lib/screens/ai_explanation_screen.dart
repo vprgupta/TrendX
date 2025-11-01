@@ -90,17 +90,10 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
     });
 
     for (String category in _categories) {
-      final text = _explanationParts[category] ?? '';
-      final words = text.split(' ');
-      
-      for (int i = 0; i < words.length; i++) {
-        await Future.delayed(const Duration(milliseconds: 100));
-        setState(() {
-          _displayedParts[category] = words.sublist(0, i + 1).join(' ');
-        });
-      }
-      
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 200));
+      setState(() {
+        _displayedParts[category] = _explanationParts[category] ?? '';
+      });
     }
     
     setState(() {
@@ -109,95 +102,106 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
   }
 
   Widget _buildAnalysisContainer(String category) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     final colors = {
-      'WHO': const Color(0xFF667eea),
-      'WHAT': const Color(0xFF764ba2),
-      'WHEN': const Color(0xFF4facfe),
-      'WHERE': const Color(0xFF00f2fe),
-      'WHY': const Color(0xFFa8edea),
-      'HOW': const Color(0xFFfed6e3),
+      'WHO': const Color(0xFF6366F1),
+      'WHAT': const Color(0xFF8B5CF6),
+      'WHEN': const Color(0xFF06B6D4),
+      'WHERE': const Color(0xFF10B981),
+      'WHY': const Color(0xFFF59E0B),
+      'HOW': const Color(0xFFEF4444),
     };
 
     final icons = {
-      'WHO': Icons.person,
-      'WHAT': Icons.info,
-      'WHEN': Icons.schedule,
-      'WHERE': Icons.location_on,
-      'WHY': Icons.help,
-      'HOW': Icons.settings,
+      'WHO': Icons.person_outline,
+      'WHAT': Icons.info_outline,
+      'WHEN': Icons.schedule_outlined,
+      'WHERE': Icons.location_on_outlined,
+      'WHY': Icons.help_outline,
+      'HOW': Icons.settings_outlined,
     };
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colors[category]!,
-            colors[category]!.withOpacity(0.7),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: colors[category]!.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+    final accentColor = colors[category]!;
+    final hasContent = _displayedParts[category]?.isNotEmpty == true;
+
+    return AnimatedOpacity(
+      opacity: hasContent ? 1.0 : 0.3,
+      duration: const Duration(milliseconds: 300),
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: accentColor.withOpacity(0.2),
+            width: 1,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Icon(
-                  icons[category],
-                  color: Colors.white,
-                  size: 16,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      icons[category],
+                      color: accentColor,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    category,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_isTyping && !hasContent)
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                category,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const Spacer(),
-              if (_isTyping && _displayedParts[category]?.isNotEmpty == true)
-                SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              if (hasContent) ...[
+                const SizedBox(height: 16),
+                AnimatedOpacity(
+                  opacity: hasContent ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 500),
+                  child: Text(
+                    _displayedParts[category] ?? '',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      height: 1.5,
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                 ),
+              ],
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            _displayedParts[category] ?? '',
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.4,
-              color: Colors.white,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -232,7 +236,23 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Original Post Card
-            Card(
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(
+                minHeight: 160,
+                maxHeight: 200,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.shadow.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -241,7 +261,7 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
                     Row(
                       children: [
                         CircleAvatar(
-                          radius: 20,
+                          radius: 24,
                           backgroundImage: NetworkImage(widget.userAvatarUrl),
                         ),
                         const SizedBox(width: 12),
@@ -251,16 +271,23 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
                             children: [
                               Text(
                                 widget.userName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              Text(
-                                widget.platform,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
+                              const SizedBox(height: 2),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  widget.platform,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ],
@@ -271,15 +298,22 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
                     const SizedBox(height: 12),
                     Text(
                       widget.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      widget.content,
-                      style: const TextStyle(fontSize: 14),
+                    Expanded(
+                      child: Text(
+                        widget.content,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          height: 1.4,
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
@@ -291,22 +325,22 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.psychology,
-                    color: Colors.blue,
+                  child: Icon(
+                    Icons.psychology_outlined,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Text(
-                  'AI Explanation',
+                  'AI Analysis',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],

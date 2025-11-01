@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../controller/news_controller.dart';
-import '../model/news_article.dart';
+import '../../../services/youtube_service.dart';
+import '../../../screens/youtube_player_screen.dart';
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
@@ -10,150 +10,245 @@ class NewsScreen extends StatefulWidget {
 }
 
 class _NewsScreenState extends State<NewsScreen> {
-  final _newsController = NewsController();
+  final YoutubeService _youtubeService = YoutubeService();
+  final PageController _pageController = PageController();
+  List<Map<String, dynamic>> _shorts = [];
+  bool _isLoading = true;
+  String? _error;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _newsController.loadTrendingNews();
+    _loadTrendingShorts();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadTrendingShorts() async {
+    try {
+      final shorts = await _youtubeService.getTrendingShorts();
+      setState(() {
+        _shorts = shorts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Trending News'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _newsController.loadTrendingNews(),
-          ),
-        ],
-      ),
-      body: ListenableBuilder(
-        listenable: _newsController,
-        builder: (context, _) {
-          if (_newsController.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      backgroundColor: Colors.black,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : _error != null
+              ? Center(
+                  child: Text(
+                    'Error: $_error',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                )
+              : PageView.builder(
+                  controller: _pageController,
+                  scrollDirection: Axis.vertical,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                  itemCount: _shorts.length,
+                  itemBuilder: (context, index) {
+                    return ReelItem(
+                      short: _shorts[index],
+                      isActive: index == _currentIndex,
+                    );
+                  },
+                ),
+    );
+  }
+}
 
-          if (_newsController.errorMessage != null) {
-            return Center(
+class ReelItem extends StatelessWidget {
+  final Map<String, dynamic> short;
+  final bool isActive;
+
+  const ReelItem({
+    super.key,
+    required this.short,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => YoutubePlayerScreen(
+              videoId: short['id'],
+              title: short['title'],
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(short['thumbnail']),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.3),
+                    Colors.black.withOpacity(0.8),
+                  ],
+                  stops: const [0.0, 0.7, 1.0],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 16,
+              right: 80,
+              bottom: 100,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: colorScheme.error),
-                  const SizedBox(height: 16),
-                  Text(_newsController.errorMessage!),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () => _newsController.loadTrendingNews(),
-                    child: const Text('Retry'),
+                  Text(
+                    short['channelTitle'] ?? '',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    short['title'] ?? '',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      height: 1.3,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-            );
-          }
-
-          if (_newsController.articles.isEmpty) {
-            return const Center(child: Text('No news available'));
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: _newsController.articles.length,
-            itemBuilder: (context, index) {
-              final article = _newsController.articles[index];
-              return _buildNewsCard(article, colorScheme);
-            },
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildNewsCard(NewsArticle article, ColorScheme colorScheme) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (article.urlToImage != null)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
-                article.urlToImage!,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 200,
-                  color: colorScheme.surfaceContainerHighest,
-                  child: Icon(Icons.image_not_supported, color: colorScheme.onSurfaceVariant),
+            ),
+            Positioned(
+              right: 16,
+              bottom: 100,
+              child: Column(
+                children: [
+                  _ActionButton(
+                    icon: Icons.favorite_border,
+                    onTap: () {},
+                  ),
+                  const SizedBox(height: 20),
+                  _ActionButton(
+                    icon: Icons.comment_outlined,
+                    onTap: () {},
+                  ),
+                  const SizedBox(height: 20),
+                  _ActionButton(
+                    icon: Icons.share_outlined,
+                    onTap: () {},
+                  ),
+                  const SizedBox(height: 20),
+                  _ActionButton(
+                    icon: Icons.play_arrow,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => YoutubePlayerScreen(
+                            videoId: short['id'],
+                            title: short['title'],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Shorts',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  article.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  article.description,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.source, size: 16, color: colorScheme.onSurfaceVariant),
-                    const SizedBox(width: 4),
-                    Text(
-                      article.source,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      _formatDate(article.publishedAt),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-    
-    if (difference.inHours < 1) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inDays < 1) {
-      return '${difference.inHours}h ago';
-    } else {
-      return '${difference.inDays}d ago';
-    }
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
+    );
   }
 }

@@ -1,10 +1,21 @@
 import '../model/platform.dart';
 import '../../../services/youtube_service.dart';
-
 import '../../../services/web_scraper_service.dart';
+import '../../../core/services/cache_service.dart';
+import '../../../core/services/analytics_service.dart';
 
 class PlatformService {
+  final AnalyticsService _analytics = AnalyticsService();
+
   Future<List<PlatformTrend>> getPlatformTrends(String platform, [String? countryCode]) async {
+    _analytics.trackPlatformView(platform);
+    
+    // Try cache first
+    final cached = await CacheService.getCachedTrends(platform, countryCode ?? 'US');
+    if (cached != null) {
+      return [];
+    }
+
     switch (platform.toLowerCase()) {
       case 'instagram':
         return await _getInstagramTrends();

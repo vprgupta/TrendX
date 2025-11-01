@@ -8,14 +8,17 @@ class AIExplainerService {
   Future<String> explainTrend(String title, String content, String platform, [String language = 'English']) async {
     print('Analyzing: Title="$title", Content="$content", Platform="$platform"'); // Debug
     
-    // Try free Gemini API first
+    // Use fallback explanation directly for now (APIs might be failing)
+    return _getFallbackExplanation(title, content, platform, language);
+    
+    // Commented out API calls - uncomment when APIs are working
+    /*
     try {
       final result = await _explainWithGemini(title, content, platform, language);
       print('Gemini API Success: ${result.substring(0, result.length > 100 ? 100 : result.length)}...'); // Debug
       return result;
     } catch (e) {
       print('Gemini API failed, trying OpenAI: $e');
-      // Fallback to OpenAI if available
       try {
         final result = await _explainWithOpenAI(title, content, platform, language);
         print('OpenAI API Success: ${result.substring(0, result.length > 100 ? 100 : result.length)}...'); // Debug
@@ -25,35 +28,41 @@ class AIExplainerService {
         return _getFallbackExplanation(title, content, platform, language);
       }
     }
+    */
   }
 
   Future<String> _explainWithGemini(String title, String content, String platform, String language) async {
-    final response = await http.post(
-      Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${Secrets.geminiApiKey}'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'contents': [{
-          'parts': [{
-            'text': 'Analyze this $platform post using 5W+1H principle in $language language. Provide detailed explanations (2-3 sentences each). Format each point on new line:\n\nWHO: [who is involved - be specific about creators, influencers, or communities]\nWHAT: [what happened - describe the content and its significance]\nWHEN: [when it occurred - timing and context]\nWHERE: [where it\'s happening - platform, geographic reach]\nWHY: [why it\'s trending - detailed reasons for popularity]\nHOW: [how it\'s spreading - mechanisms of viral growth]\n\nTitle: "$title" Content: "$content"'
-          }]
-        }],
-        'generationConfig': {
-          'maxOutputTokens': 1000,
-          'temperature': 0.7
-        }
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${Secrets.geminiApiKey}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'contents': [{
+            'parts': [{
+              'text': 'Analyze this $platform post using 5W+1H principle in $language language. Provide detailed explanations (2-3 sentences each). Format each point on new line:\n\nWHO: [who is involved - be specific about creators, influencers, or communities]\nWHAT: [what happened - describe the content and its significance]\nWHEN: [when it occurred - timing and context]\nWHERE: [where it\'s happening - platform, geographic reach]\nWHY: [why it\'s trending - detailed reasons for popularity]\nHOW: [how it\'s spreading - mechanisms of viral growth]\n\nTitle: "$title" Content: "$content"'
+            }]
+          }],
+          'generationConfig': {
+            'maxOutputTokens': 1000,
+            'temperature': 0.7
+          }
+        }),
+      ).timeout(const Duration(seconds: 10));
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['candidates'] != null && data['candidates'].isNotEmpty) {
-        return data['candidates'][0]['content']['parts'][0]['text'].trim();
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['candidates'] != null && data['candidates'].isNotEmpty) {
+          return data['candidates'][0]['content']['parts'][0]['text'].trim();
+        } else {
+          throw Exception('No response from Gemini');
+        }
       } else {
-        throw Exception('No response from Gemini');
+        print('Gemini API Response: ${response.body}');
+        throw Exception('Gemini API Error: ${response.statusCode}');
       }
-    } else {
-      print('Gemini API Response: ${response.body}');
-      throw Exception('Gemini API Error: ${response.statusCode}');
+    } catch (e) {
+      print('Gemini API Exception: $e');
+      throw Exception('Network error or API unavailable');
     }
   }
 

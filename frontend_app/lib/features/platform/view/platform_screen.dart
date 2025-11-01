@@ -4,7 +4,7 @@ import '../../../core/services/preferences_service.dart';
 import '../controller/platform_controller.dart';
 import '../model/platform.dart';
 import 'widgets/platform_feed.dart';
-import '../../../screens/trending_shorts_screen.dart';
+
 
 class PlatformScreen extends StatefulWidget {
   const PlatformScreen({super.key});
@@ -85,15 +85,8 @@ class _PlatformScreenState extends State<PlatformScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: _buildShortsCard(),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.only(top: 8),
+      body: ListView.builder(
+              padding: const EdgeInsets.all(16),
               itemCount: _prefsService.selectedPlatforms.length,
               itemBuilder: (context, index) {
                 final platform = _prefsService.selectedPlatforms.elementAt(index);
@@ -124,64 +117,8 @@ class _PlatformScreenState extends State<PlatformScreen> {
                 );
               },
             ),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildShortsCard() {
-    return Container(
-      margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
-      width: 200,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TrendingShortsScreen(),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF6B6B), Color(0xFFFF8E53)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF6B6B).withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Shorts',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+
 }

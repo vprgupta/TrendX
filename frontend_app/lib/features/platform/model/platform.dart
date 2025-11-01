@@ -11,6 +11,7 @@ class PlatformTrend {
   final int shares;
   final DateTime timestamp;
   final String? videoId;
+  final String? videoUrl;
 
   PlatformTrend({
     required this.platformName,
@@ -25,5 +26,6 @@ class PlatformTrend {
     required this.shares,
     required this.timestamp,
     this.videoId,
+    this.videoUrl,
   });
 }
