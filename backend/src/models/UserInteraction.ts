@@ -1,29 +1,18 @@
-import mongoose, { Schema } from 'mongoose';
-import { IUserInteraction } from '../types';
+import mongoose, { Document } from 'mongoose';
 
-const userInteractionSchema = new Schema<IUserInteraction>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  trendId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Trend',
-    required: true
-  },
-  type: {
-    type: String,
-    required: true,
-    enum: ['view', 'like', 'save', 'share']
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now
-  }
-});
+interface IUserInteraction extends Document {
+  userId: mongoose.Types.ObjectId;
+  trendId: mongoose.Types.ObjectId;
+  type: 'view' | 'like' | 'bookmark' | 'share';
+  timestamp: Date;
+}
 
-userInteractionSchema.index({ userId: 1, trendId: 1, type: 1 }, { unique: true });
-userInteractionSchema.index({ timestamp: -1 });
+const userInteractionSchema = new mongoose.Schema<IUserInteraction>({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  trendId: { type: mongoose.Schema.Types.ObjectId, ref: 'Trend', required: true },
+  type: { type: String, enum: ['view', 'like', 'bookmark', 'share'], required: true },
+  timestamp: { type: Date, default: Date.now }
+}, { timestamps: true });
 
 export default mongoose.model<IUserInteraction>('UserInteraction', userInteractionSchema);
+export { IUserInteraction };

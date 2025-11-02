@@ -1,50 +1,48 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { IUser } from '../types';
 
-const userSchema = new Schema<IUser>({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
+interface IUser extends Document {
+  email: string;
+  password: string;
+  name: string;
+  savedTrends: mongoose.Types.ObjectId[];
   preferences: {
-    platforms: [{
-      type: String,
-      enum: ['youtube', 'twitter', 'reddit', 'news']
-    }],
-    categories: [String],
-    countries: [String]
+    platforms: string[];
+    countries: string[];
+    categories: string[];
+  };
+  stats: {
+    following: number;
+    bookmarks: number;
+    views: number;
+  };
+  comparePassword(password: string): Promise<boolean>;
+}
+
+const userSchema = new mongoose.Schema<IUser>({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
+  savedTrends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Trend' }],
+  preferences: {
+    platforms: [String],
+    countries: [String],
+    categories: [String]
   },
-  savedTrends: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Trend'
-  }],
-  createdAt: {
-    type: Date,
-    default: Date.now
+  stats: {
+    following: { type: Number, default: 0 },
+    bookmarks: { type: Number, default: 0 },
+    views: { type: Number, default: 0 }
   }
-});
+}, { timestamps: true });
 
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-userSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function(password: string) {
   return bcrypt.compare(password, this.password);
 };
 

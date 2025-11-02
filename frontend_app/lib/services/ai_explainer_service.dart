@@ -8,27 +8,14 @@ class AIExplainerService {
   Future<String> explainTrend(String title, String content, String platform, [String language = 'English']) async {
     print('Analyzing: Title="$title", Content="$content", Platform="$platform"'); // Debug
     
-    // Use fallback explanation directly for now (APIs might be failing)
-    return _getFallbackExplanation(title, content, platform, language);
-    
-    // Commented out API calls - uncomment when APIs are working
-    /*
     try {
       final result = await _explainWithGemini(title, content, platform, language);
       print('Gemini API Success: ${result.substring(0, result.length > 100 ? 100 : result.length)}...'); // Debug
       return result;
     } catch (e) {
-      print('Gemini API failed, trying OpenAI: $e');
-      try {
-        final result = await _explainWithOpenAI(title, content, platform, language);
-        print('OpenAI API Success: ${result.substring(0, result.length > 100 ? 100 : result.length)}...'); // Debug
-        return result;
-      } catch (e2) {
-        print('OpenAI API failed, using fallback: $e2');
-        return _getFallbackExplanation(title, content, platform, language);
-      }
+      print('Gemini API failed, using fallback: $e');
+      return _getFallbackExplanation(title, content, platform, language);
     }
-    */
   }
 
   Future<String> _explainWithGemini(String title, String content, String platform, String language) async {

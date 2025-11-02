@@ -8,96 +8,124 @@ class WebScraperService {
   Future<List<Map<String, dynamic>>> getInstagramTrends() async {
     try {
       final response = await http.get(
-        Uri.parse('https://www.instagram.com/explore/tags/trending/'),
-        headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
-      );
+        Uri.parse('https://hashtagify.me/hashtag/trending'),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+        },
+      ).timeout(const Duration(seconds: 5));
+      
+      print('Instagram response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final document = parser.parse(response.body);
         final trends = <Map<String, dynamic>>[];
         
-        // Extract trending hashtags from meta tags
-        final scripts = document.querySelectorAll('script');
-        for (var script in scripts) {
-          if (script.text.contains('hashtag')) {
-            // Parse trending hashtags from script content
-            trends.add({
-              'name': '#trending',
-              'posts': 1000000,
-              'description': 'Popular content on Instagram',
-            });
-            break;
+        // Try multiple selectors
+        var elements = document.querySelectorAll('a[href*="hashtag"], .hashtag, [data-hashtag], .tag');
+        if (elements.isEmpty) {
+          elements = document.querySelectorAll('span, div, p');
+        }
+        
+        for (var element in elements.take(20)) {
+          final text = element.text.trim();
+          if (text.contains('#') && text.length > 2 && text.length < 30) {
+            final hashtag = text.contains('#') ? text.split('#')[1].split(' ')[0] : text;
+            if (hashtag.isNotEmpty && hashtag.length > 1) {
+              trends.add({
+                'name': '#$hashtag',
+                'posts': 500000 + (trends.length * 100000),
+                'description': 'Trending Instagram hashtag',
+              });
+            }
           }
         }
         
+        print('Instagram trends found: ${trends.length}');
         return trends.isNotEmpty ? trends : _getFallbackInstagramTrends();
       }
     } catch (e) {
-      return _getFallbackInstagramTrends();
+      print('Instagram scraping error: $e');
     }
     return _getFallbackInstagramTrends();
   }
 
-  // TikTok trending scraping
   // Twitter trending scraping
   Future<List<Map<String, dynamic>>> getTwitterTrends() async {
     try {
       final response = await http.get(
-        Uri.parse('https://trends24.in/united-states/'),
-        headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
-      );
+        Uri.parse('https://trendogate.com/'),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+        },
+      ).timeout(const Duration(seconds: 5));
+      
+      print('Twitter response status: ${response.statusCode}');
       
       if (response.statusCode == 200) {
         final document = parser.parse(response.body);
         final trends = <Map<String, dynamic>>[];
         
-        // Extract trending hashtags
-        final trendElements = document.querySelectorAll('.trend-card__list li');
-        for (var element in trendElements.take(10)) {
+        // Try multiple selectors
+        var elements = document.querySelectorAll('a, .trend, .trending, [data-trend], li, span');
+        
+        for (var element in elements.take(30)) {
           final title = element.text.trim();
-          if (title.isNotEmpty) {
+          if (title.isNotEmpty && title.length > 2 && title.length < 50 && 
+              !title.contains('http') && !title.contains('@') && 
+              !title.toLowerCase().contains('trend') && !title.toLowerCase().contains('follow')) {
             trends.add({
               'name': title,
-              'tweet_volume': 50000 + (trends.length * 10000),
+              'tweet_volume': 75000 + (trends.length * 15000),
               'description': 'Trending on Twitter',
             });
           }
+          if (trends.length >= 10) break;
         }
         
+        print('Twitter trends found: ${trends.length}');
         return trends.isNotEmpty ? trends : _getFallbackTwitterTrends();
       }
     } catch (e) {
-      return _getFallbackTwitterTrends();
+      print('Twitter scraping error: $e');
     }
     return _getFallbackTwitterTrends();
   }
 
+  // TikTok trending scraping
   Future<List<Map<String, dynamic>>> getTikTokTrends() async {
     try {
       final response = await http.get(
-        Uri.parse('https://www.tiktok.com/trending'),
-        headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
+        Uri.parse('https://tokboard.com/'),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
       );
       
       if (response.statusCode == 200) {
         final document = parser.parse(response.body);
         final trends = <Map<String, dynamic>>[];
         
-        // Extract trending content
-        final trendElements = document.querySelectorAll('[data-e2e="challenge-item"]');
+        final trendElements = document.querySelectorAll('.hashtag, .trend-item, .tag');
         for (var element in trendElements.take(10)) {
-          final title = element.querySelector('h3')?.text ?? 'Trending Challenge';
-          trends.add({
-            'name': title,
-            'views': 50000000,
-            'description': 'Viral TikTok content',
-          });
+          final title = element.text.trim();
+          if (title.isNotEmpty && title.length > 1) {
+            trends.add({
+              'name': title.startsWith('#') ? title : '#$title',
+              'views': 25000000 + (trends.length * 5000000),
+              'description': 'Viral TikTok hashtag',
+            });
+          }
         }
         
         return trends.isNotEmpty ? trends : _getFallbackTikTokTrends();
       }
     } catch (e) {
-      return _getFallbackTikTokTrends();
+      print('TikTok scraping error: $e');
     }
     return _getFallbackTikTokTrends();
   }

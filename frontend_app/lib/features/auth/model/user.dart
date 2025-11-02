@@ -22,10 +22,12 @@ class User {
   };
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-    id: json['id'],
-    email: json['email'],
-    name: json['name'],
-    createdAt: DateTime.parse(json['createdAt']),
+    id: json['id'] ?? json['_id'] ?? '',
+    email: json['email'] ?? '',
+    name: json['name'] ?? '',
+    createdAt: json['createdAt'] != null 
+        ? DateTime.parse(json['createdAt']) 
+        : DateTime.now(),
     isEmailVerified: json['isEmailVerified'] ?? false,
   );
 }

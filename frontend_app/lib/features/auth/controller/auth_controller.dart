@@ -3,6 +3,10 @@ import '../service/auth_service.dart';
 import '../model/user.dart';
 
 class AuthController extends ChangeNotifier {
+  static final AuthController _instance = AuthController._internal();
+  factory AuthController() => _instance;
+  AuthController._internal();
+
   final AuthService _authService = AuthService();
   
   User? _currentUser;

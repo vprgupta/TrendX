@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'http://localhost:3000';
 
 async function testBackend() {
   console.log('🧪 Testing TrendX Backend API...\n');
@@ -8,7 +8,7 @@ async function testBackend() {
   try {
     // Test 1: Health Check
     console.log('1. Testing Health Check...');
-    const healthResponse = await axios.get(`${BASE_URL}/health`);
+    const healthResponse = await axios.get(`${BASE_URL}/api/health`);
     console.log('✅ Health Check:', healthResponse.data);
     console.log('');
 

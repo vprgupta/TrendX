@@ -24,6 +24,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   int _currentIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
+  late PageController _pageController;
 
   List<Widget> get _screens => [
     const PlatformScreen(),
@@ -46,6 +47,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -57,6 +59,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
 
   @override
   void dispose() {
+    _pageController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -66,7 +69,16 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
     final colorScheme = Theme.of(context).colorScheme;
     
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: PageView.builder(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        itemCount: _screens.length,
+        itemBuilder: (context, index) => _screens[index],
+      ),
       bottomNavigationBar: Container(
         height: 65,
         decoration: BoxDecoration(
@@ -88,9 +100,11 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
             
             return GestureDetector(
               onTap: () {
-                setState(() {
-                  _currentIndex = index;
-                });
+                _pageController.animateToPage(
+                  index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
                 _animationController.forward().then((_) {
                   _animationController.reverse();
                 });

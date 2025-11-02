@@ -1,25 +1,16 @@
-import { Router } from 'express';
-import {
-  getTrends,
-  getTrendById,
-  searchTrends,
-  getTrendsByPlatform,
-  getTrendsByCountry,
-  getTrendsByCategory,
-  createTrend
-} from '../controllers/trendController';
+import express from 'express';
+import * as trendController from '../controllers/trendController';
 import { authenticate } from '../middleware/auth';
-import { validate } from '../middleware/validation';
-import { trendSchema } from '../utils/validation';
+import { validateTrend } from '../middleware/validation';
 
-const router = Router();
+const router = express.Router();
 
-router.get('/', getTrends);
-router.get('/search', searchTrends);
-router.get('/platform/:platform', getTrendsByPlatform);
-router.get('/country/:country', getTrendsByCountry);
-router.get('/category/:category', getTrendsByCategory);
-router.get('/:id', getTrendById);
-router.post('/', authenticate, validate(trendSchema), createTrend);
+router.get('/', trendController.getTrends);
+router.get('/search', trendController.searchTrends);
+router.get('/platform/:platform', trendController.getTrendsByPlatform);
+router.get('/country/:country', trendController.getTrendsByCountry);
+router.get('/category/:category', trendController.getTrendsByCategory);
+router.get('/:id', trendController.getTrendById);
+router.post('/', authenticate, validateTrend, trendController.createTrend);
 
 export default router;
