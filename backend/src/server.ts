@@ -3,10 +3,13 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
 import 'express-async-errors';
 import authRoutes from './routes/auth';
 import trendRoutes from './routes/trends';
 import userRoutes from './routes/users';
+import adminRoutes from './routes/admin';
+import sessionRoutes from './routes/sessions';
 import { errorHandler } from './middleware/errorHandler';
 import { connectDB } from './config/database';
 
@@ -40,6 +43,13 @@ app.use('/api/auth/', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/trends', trendRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/sessions', sessionRoutes);
+
+// Serve dashboard
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '../admin-dashboard-with-sidebar.html'));
+});
 
 // Health check
 app.get('/api/health', (req, res) => {

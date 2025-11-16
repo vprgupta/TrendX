@@ -6,7 +6,7 @@ import '../model/user.dart';
 class AuthService {
   static const String _userKey = 'current_user';
   static const String _tokenKey = 'auth_token';
-  static const String _baseUrl = 'http://10.22.31.214:3000/api/auth';
+  static const String _baseUrl = 'http://localhost:3000/api/auth';
 
   Future<User?> login(String email, String password) async {
     try {
@@ -22,6 +22,8 @@ class AuthService {
         await _saveToken(data['token']);
         await _saveUser(user);
         return user;
+      } else {
+        print('Login failed: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Login error: $e');
@@ -43,6 +45,8 @@ class AuthService {
         await _saveToken(data['token']);
         await _saveUser(user);
         return user;
+      } else {
+        print('Register failed: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('Register error: $e');
