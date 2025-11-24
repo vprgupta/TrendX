@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/shimmer_card.dart';
+import '../../../core/widgets/trendx_logo.dart';
 import '../../../core/services/preferences_service.dart';
 import '../controller/platform_controller.dart';
 import '../model/platform.dart';
@@ -70,24 +71,9 @@ class _PlatformScreenState extends State<PlatformScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
                 children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFEC4899)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ).createShader(bounds),
-                    child: Text(
-                      'TrendX',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.5,
-                        color: Colors.black,
-                        fontFamily: '.SF Pro Display',
-                        height: 1.0,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
+                  TrendXLogo(
+                    height: 80,
+                    isDark: Theme.of(context).brightness == Brightness.dark,
                   ),
                   const Spacer(),
                   Container(

@@ -21,7 +21,7 @@ class AIExplainerService {
   Future<String> _explainWithGemini(String title, String content, String platform, String language) async {
     try {
       final response = await http.post(
-        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${Secrets.geminiApiKey}'),
+        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${Secrets.geminiApiKey}'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'contents': [{
@@ -41,10 +41,12 @@ class AIExplainerService {
         if (data['candidates'] != null && data['candidates'].isNotEmpty) {
           return data['candidates'][0]['content']['parts'][0]['text'].trim();
         } else {
+          print('Gemini API Empty Candidates: ${response.body}');
           throw Exception('No response from Gemini');
         }
       } else {
-        print('Gemini API Response: ${response.body}');
+        print('Gemini API Error Status: ${response.statusCode}');
+        print('Gemini API Error Body: ${response.body}');
         throw Exception('Gemini API Error: ${response.statusCode}');
       }
     } catch (e) {

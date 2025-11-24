@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/api_service.dart';
 
 class PreferencesService extends ChangeNotifier {
   static final PreferencesService _instance = PreferencesService._internal();
@@ -21,28 +22,82 @@ class PreferencesService extends ChangeNotifier {
   String _selectedCountryFilter = 'Worldwide';
   String get selectedCountryFilter => _selectedCountryFilter;
 
-  void updatePlatforms(Set<String> platforms) {
+  Future<void> updatePlatforms(Set<String> platforms) async {
     _selectedPlatforms.clear();
     _selectedPlatforms.addAll(platforms);
+    await _syncToBackend();
     notifyListeners();
   }
 
-  void updateCountries(Set<String> countries) {
+  Future<void> updateCountries(Set<String> countries) async {
     _selectedCountries.clear();
     _selectedCountries.addAll(countries);
+    await _syncToBackend();
     notifyListeners();
   }
 
-  void updateWorldCategories(Set<String> categories) {
+  Future<void> updateWorldCategories(Set<String> categories) async {
     _selectedWorldCategories.clear();
     _selectedWorldCategories.addAll(categories);
+    await _syncToBackend();
     notifyListeners();
   }
 
-  void updateTechCategories(Set<String> categories) {
+  Future<void> updateTechCategories(Set<String> categories) async {
     _selectedTechCategories.clear();
     _selectedTechCategories.addAll(categories);
+    await _syncToBackend();
     notifyListeners();
+  }
+
+  Future<void> _syncToBackend() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        await ApiService.updatePreferences(token, {
+          'platforms': _selectedPlatforms.toList(),
+          'countries': _selectedCountries.toList(),
+          'worldCategories': _selectedWorldCategories.toList(),
+          'techCategories': _selectedTechCategories.toList(),
+        });
+      }
+    } catch (e) {
+      // Handle error silently for now
+    }
+  }
+
+  Future<void> loadFromBackend() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        final response = await ApiService.getPreferences(token);
+        final preferences = response['preferences'];
+        
+        _selectedPlatforms.clear();
+        _selectedPlatforms.addAll(List<String>.from(preferences['platforms'] ?? []));
+        
+        _selectedCountries.clear();
+        _selectedCountries.addAll(List<String>.from(preferences['countries'] ?? []));
+        
+        final categories = List<String>.from(preferences['categories'] ?? []);
+        _selectedWorldCategories.clear();
+        _selectedTechCategories.clear();
+        
+        for (final category in categories) {
+          if (['Science', 'Agriculture', 'Space', 'Art', 'Environment', 'Health', 'Politics', 'Sports', 'Entertainment'].contains(category)) {
+            _selectedWorldCategories.add(category);
+          } else {
+            _selectedTechCategories.add(category);
+          }
+        }
+        
+        notifyListeners();
+      }
+    } catch (e) {
+      // Handle error silently for now
+    }
   }
 
   Future<void> loadCountryFilter() async {

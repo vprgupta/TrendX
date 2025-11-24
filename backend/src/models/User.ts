@@ -5,6 +5,9 @@ interface IUser extends Document {
   email: string;
   password: string;
   name: string;
+  role: 'user' | 'admin' | 'moderator';
+  status: 'active' | 'inactive' | 'blocked';
+  lastActive: Date;
   savedTrends: mongoose.Types.ObjectId[];
   preferences: {
     platforms: string[];
@@ -23,6 +26,9 @@ const userSchema = new mongoose.Schema<IUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String, required: true },
+  role: { type: String, enum: ['user', 'admin', 'moderator'], default: 'user' },
+  status: { type: String, enum: ['active', 'inactive', 'blocked'], default: 'active' },
+  lastActive: { type: Date, default: Date.now },
   savedTrends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Trend' }],
   preferences: {
     platforms: [String],

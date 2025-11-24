@@ -13,5 +13,7 @@ router.get('/saved-trends', userController.getSavedTrends);
 router.post('/saved-trends/:trendId', userController.saveTrend);
 router.delete('/saved-trends/:trendId', userController.unsaveTrend);
 router.post('/interactions', userController.trackInteraction);
+router.get('/preferences', userController.getPreferences);
+router.put('/preferences', userController.updatePreferences);
 
 export default router;

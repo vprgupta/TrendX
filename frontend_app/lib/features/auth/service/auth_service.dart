@@ -2,16 +2,17 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../model/user.dart';
+import '../../../services/session_service.dart';
+import '../../../config/api_config.dart';
 
 class AuthService {
   static const String _userKey = 'current_user';
   static const String _tokenKey = 'auth_token';
-  static const String _baseUrl = 'http://localhost:3000/api/auth';
 
   Future<User?> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/login'),
+        Uri.parse(ApiConfig.authLogin),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'email': email, 'password': password}),
       );
@@ -21,6 +22,7 @@ class AuthService {
         final user = User.fromJson(data['user']);
         await _saveToken(data['token']);
         await _saveUser(user);
+        await SessionService.syncSession(data['token']);
         return user;
       } else {
         print('Login failed: ${response.statusCode} - ${response.body}');
@@ -34,7 +36,7 @@ class AuthService {
   Future<User?> register(String name, String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/register'),
+        Uri.parse(ApiConfig.authRegister),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'name': name, 'email': email, 'password': password}),
       );
@@ -44,6 +46,7 @@ class AuthService {
         final user = User.fromJson(data['user']);
         await _saveToken(data['token']);
         await _saveUser(user);
+        await SessionService.syncSession(data['token']);
         return user;
       } else {
         print('Register failed: ${response.statusCode} - ${response.body}');
@@ -64,7 +67,7 @@ class AuthService {
       final token = await _getToken();
       if (token != null) {
         await http.post(
-          Uri.parse('$_baseUrl/logout'),
+          Uri.parse('${ApiConfig.baseUrl}/auth/logout'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $token',

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createTrend = exports.getTrendsByCategory = exports.getTrendsByCountry = exports.getTrendsByPlatform = exports.searchTrends = exports.getTrendById = exports.getTrends = void 0;
+exports.deleteTrend = exports.createTrend = exports.getTrendsByCategory = exports.getTrendsByCountry = exports.getTrendsByPlatform = exports.searchTrends = exports.getTrendById = exports.getTrends = void 0;
 const Trend_1 = __importDefault(require("../models/Trend"));
 const getTrends = async (req, res) => {
     const { platform, country, category, limit = 20, page = 1 } = req.query;
@@ -83,6 +83,16 @@ const getTrendsByCategory = async (req, res) => {
 exports.getTrendsByCategory = getTrendsByCategory;
 const createTrend = async (req, res) => {
     const trend = await Trend_1.default.create(req.body);
+    req.io?.emit('trendCreated', trend);
     res.status(201).json({ message: 'Trend created', trend });
 };
 exports.createTrend = createTrend;
+const deleteTrend = async (req, res) => {
+    const trend = await Trend_1.default.findByIdAndDelete(req.params.id);
+    if (!trend) {
+        return res.status(404).json({ error: 'Trend not found' });
+    }
+    req.io?.emit('trendDeleted', { id: req.params.id });
+    res.json({ message: 'Trend deleted successfully' });
+};
+exports.deleteTrend = deleteTrend;

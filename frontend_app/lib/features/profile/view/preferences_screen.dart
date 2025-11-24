@@ -10,11 +10,25 @@ class PreferencesScreen extends StatefulWidget {
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
   final PreferencesService _prefsService = PreferencesService();
+  bool _isLoading = true;
   
   final List<String> _platforms = ['Instagram', 'Facebook', 'Twitter', 'YouTube', 'TikTok', 'LinkedIn', 'Reddit', 'Snapchat'];
   final List<String> _countries = ['USA', 'India', 'UK', 'Japan', 'Germany', 'France', 'Brazil', 'Canada'];
   final List<String> _worldCategories = ['Science', 'Agriculture', 'Space', 'Art', 'Environment', 'Health', 'Politics', 'Sports', 'Entertainment'];
   final List<String> _techCategories = ['AI', 'Mobile', 'Web', 'Blockchain', 'IoT', 'Robotics', 'Cloud', 'Cybersecurity'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    await _prefsService.loadFromBackend();
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,53 +47,60 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
         backgroundColor: colorScheme.surface,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionCard(
-              'Platform Preferences',
-              'Choose your favorite social media platforms',
-              Icons.apps,
-              Colors.blue,
-              _platforms,
-              _prefsService.selectedPlatforms,
-              _prefsService.updatePlatforms,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListenableBuilder(
+              listenable: _prefsService,
+              builder: (context, child) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionCard(
+                        'Platform Preferences',
+                        'Choose your favorite social media platforms',
+                        Icons.apps,
+                        Colors.blue,
+                        _platforms,
+                        _prefsService.selectedPlatforms,
+                        _prefsService.updatePlatforms,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSectionCard(
+                        'Country Preferences',
+                        'Select countries you want to follow',
+                        Icons.flag,
+                        Colors.green,
+                        _countries,
+                        _prefsService.selectedCountries,
+                        _prefsService.updateCountries,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSectionCard(
+                        'World Categories',
+                        'Pick global topics that interest you',
+                        Icons.public,
+                        Colors.purple,
+                        _worldCategories,
+                        _prefsService.selectedWorldCategories,
+                        _prefsService.updateWorldCategories,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSectionCard(
+                        'Technology Categories',
+                        'Choose your tech interests',
+                        Icons.computer,
+                        Colors.orange,
+                        _techCategories,
+                        _prefsService.selectedTechCategories,
+                        _prefsService.updateTechCategories,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            const SizedBox(height: 16),
-            _buildSectionCard(
-              'Country Preferences',
-              'Select countries you want to follow',
-              Icons.flag,
-              Colors.green,
-              _countries,
-              _prefsService.selectedCountries,
-              _prefsService.updateCountries,
-            ),
-            const SizedBox(height: 16),
-            _buildSectionCard(
-              'World Categories',
-              'Pick global topics that interest you',
-              Icons.public,
-              Colors.purple,
-              _worldCategories,
-              _prefsService.selectedWorldCategories,
-              _prefsService.updateWorldCategories,
-            ),
-            const SizedBox(height: 16),
-            _buildSectionCard(
-              'Technology Categories',
-              'Choose your tech interests',
-              Icons.computer,
-              Colors.orange,
-              _techCategories,
-              _prefsService.selectedTechCategories,
-              _prefsService.updateTechCategories,
-            ),
-          ],
-        ),
-      ),
     );
   }
 

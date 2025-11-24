@@ -4,7 +4,7 @@ import '../country/view/country_screen.dart';
 import '../world/view/world_screen.dart';
 import '../technology/view/technology_screen.dart';
 import '../profile/view/profile_screen.dart';
-import '../news/view/news_screen.dart';
+import '../../screens/reels_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   final VoidCallback onThemeToggle;
@@ -24,11 +24,10 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   int _currentIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  late PageController _pageController;
 
   List<Widget> get _screens => [
     const PlatformScreen(),
-    const NewsScreen(),
+    const ReelsScreen(),
     const CountryScreen(),
     const WorldScreen(),
     const TechnologyScreen(),
@@ -47,7 +46,6 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -59,9 +57,19 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
 
   @override
   void dispose() {
-    _pageController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _onNavItemTapped(int index) {
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+      });
+      _animationController.forward().then((_) {
+        _animationController.reverse();
+      });
+    }
   }
 
   @override
@@ -69,15 +77,9 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
     final colorScheme = Theme.of(context).colorScheme;
     
     return Scaffold(
-      body: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        itemCount: _screens.length,
-        itemBuilder: (context, index) => _screens[index],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
       ),
       bottomNavigationBar: Container(
         height: 65,
@@ -86,7 +88,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, -1),
             ),
@@ -99,21 +101,12 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
             final isSelected = _currentIndex == index;
             
             return GestureDetector(
-              onTap: () {
-                _pageController.animateToPage(
-                  index,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-                _animationController.forward().then((_) {
-                  _animationController.reverse();
-                });
-              },
+              onTap: () => _onNavItemTapped(index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isSelected ? item.color.withOpacity(0.1) : Colors.transparent,
+                  color: isSelected ? item.color.withValues(alpha: 0.1) : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(

@@ -1,6 +1,7 @@
 class ApiConfig {
-  static const String baseUrl = 'http://localhost:5000/api';
-  static const String healthUrl = 'http://localhost:5000/health';
+  static const String serverUrl = 'http://10.22.31.214:3000';
+  static const String baseUrl = '$serverUrl/api';
+  static const String healthUrl = 'http://10.22.31.214:3000/api/health';
   
   // API Endpoints
   static const String authRegister = '$baseUrl/auth/register';

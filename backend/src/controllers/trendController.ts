@@ -4,7 +4,7 @@ import { AuthRequest } from '../types';
 
 export const getTrends = async (req: Request, res: Response) => {
   const { platform, country, category, limit = 20, page = 1 } = req.query;
-  
+
   const filter: any = {};
   if (platform) filter.platform = platform;
   if (country) filter.country = country;
@@ -30,7 +30,7 @@ export const getTrends = async (req: Request, res: Response) => {
 
 export const getTrendById = async (req: Request, res: Response) => {
   const trend = await Trend.findById(req.params.id);
-  
+
   if (!trend) {
     return res.status(404).json({ error: 'Trend not found' });
   }
@@ -92,5 +92,50 @@ export const getTrendsByCategory = async (req: Request, res: Response) => {
 
 export const createTrend = async (req: Request, res: Response) => {
   const trend = await Trend.create(req.body);
+  (req as any).io?.emit('trendCreated', trend);
   res.status(201).json({ message: 'Trend created', trend });
+};
+
+export const deleteTrend = async (req: Request, res: Response) => {
+  try {
+    const trend = await Trend.findByIdAndDelete(req.params.id);
+
+    if (!trend) {
+      return res.status(404).json({ error: 'Trend not found' });
+    }
+
+    res.json({ message: 'Trend deleted successfully', trend });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete trend' });
+  }
+};
+
+export const updateTrend = async (req: Request, res: Response) => {
+  try {
+    const { title, description, platform, category, country, metrics, sentiment, status } = req.body;
+
+    const trend = await Trend.findByIdAndUpdate(
+      req.params.id,
+      {
+        title,
+        description,
+        platform,
+        category,
+        country,
+        metrics,
+        sentiment,
+        status,
+        updatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!trend) {
+      return res.status(404).json({ error: 'Trend not found' });
+    }
+
+    res.json({ message: 'Trend updated successfully', trend });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update trend' });
+  }
 };

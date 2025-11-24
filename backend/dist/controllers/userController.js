@@ -3,57 +3,76 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePreferences = exports.getPreferences = exports.removeSavedTrend = exports.saveTrend = exports.getSavedTrends = exports.getStats = exports.updateProfile = exports.getProfile = void 0;
+exports.getPreferences = exports.updatePreferences = exports.trackInteraction = exports.unsaveTrend = exports.saveTrend = exports.getSavedTrends = exports.updateProfile = exports.getProfile = void 0;
 const User_1 = __importDefault(require("../models/User"));
+const Trend_1 = __importDefault(require("../models/Trend"));
+const UserInteraction_1 = __importDefault(require("../models/UserInteraction"));
 const getProfile = async (req, res) => {
-    const user = await User_1.default.findById(req.user._id).select('-password');
-    res.json({ user });
+    const user = await User_1.default.findById(req.user?._id).select('-password').populate('savedTrends');
+    res.json(user);
 };
 exports.getProfile = getProfile;
 const updateProfile = async (req, res) => {
-    const { name, email } = req.body;
-    const user = await User_1.default.findByIdAndUpdate(req.user._id, { name, email }, { new: true }).select('-password');
-    res.json({ user });
+    const { name, preferences } = req.body;
+    const user = await User_1.default.findByIdAndUpdate(req.user?._id, { name, preferences }, { new: true }).select('-password');
+    res.json({ message: 'Profile updated', user });
 };
 exports.updateProfile = updateProfile;
-const getStats = async (req, res) => {
-    const user = await User_1.default.findById(req.user._id);
-    if (!user)
-        return res.status(404).json({ error: 'User not found' });
-    res.json({ stats: user.stats });
-};
-exports.getStats = getStats;
 const getSavedTrends = async (req, res) => {
-    const user = await User_1.default.findById(req.user._id).populate('savedTrends');
-    if (!user)
-        return res.status(404).json({ error: 'User not found' });
-    res.json({ trends: user.savedTrends });
+    const user = await User_1.default.findById(req.user?._id).populate('savedTrends');
+    res.json({ savedTrends: user?.savedTrends || [] });
 };
 exports.getSavedTrends = getSavedTrends;
 const saveTrend = async (req, res) => {
-    const { trendId } = req.body;
-    const user = await User_1.default.findByIdAndUpdate(req.user._id, { $addToSet: { savedTrends: trendId }, $inc: { 'stats.bookmarks': 1 } }, { new: true });
+    const { trendId } = req.params;
+    const trend = await Trend_1.default.findById(trendId);
+    if (!trend) {
+        return res.status(404).json({ error: 'Trend not found' });
+    }
+    await User_1.default.findByIdAndUpdate(req.user?._id, {
+        $addToSet: { savedTrends: trendId }
+    });
+    // Track interaction
+    await UserInteraction_1.default.create({
+        userId: req.user?._id,
+        trendId,
+        type: 'save'
+    });
     res.json({ message: 'Trend saved' });
 };
 exports.saveTrend = saveTrend;
-const removeSavedTrend = async (req, res) => {
-    const { id } = req.params;
-    await User_1.default.findByIdAndUpdate(req.user._id, { $pull: { savedTrends: id }, $inc: { 'stats.bookmarks': -1 } });
-    res.json({ message: 'Trend removed' });
+const unsaveTrend = async (req, res) => {
+    const { trendId } = req.params;
+    await User_1.default.findByIdAndUpdate(req.user?._id, {
+        $pull: { savedTrends: trendId }
+    });
+    res.json({ message: 'Trend unsaved' });
 };
-exports.removeSavedTrend = removeSavedTrend;
-const getPreferences = async (req, res) => {
-    const user = await User_1.default.findById(req.user._id);
-    if (!user)
-        return res.status(404).json({ error: 'User not found' });
-    res.json({ preferences: user.preferences });
+exports.unsaveTrend = unsaveTrend;
+const trackInteraction = async (req, res) => {
+    const { trendId, type } = req.body;
+    await UserInteraction_1.default.create({
+        userId: req.user?._id,
+        trendId,
+        type
+    });
+    res.json({ message: 'Interaction tracked' });
 };
-exports.getPreferences = getPreferences;
+exports.trackInteraction = trackInteraction;
 const updatePreferences = async (req, res) => {
-    const { platforms, countries, categories } = req.body;
-    const user = await User_1.default.findByIdAndUpdate(req.user._id, { preferences: { platforms, countries, categories } }, { new: true });
-    if (!user)
-        return res.status(404).json({ error: 'User not found' });
-    res.json({ preferences: user.preferences });
+    const { platforms, countries, worldCategories, techCategories } = req.body;
+    const user = await User_1.default.findByIdAndUpdate(req.user?._id, {
+        preferences: {
+            platforms: platforms || [],
+            countries: countries || [],
+            categories: [...(worldCategories || []), ...(techCategories || [])]
+        }
+    }, { new: true }).select('-password');
+    res.json({ message: 'Preferences updated', preferences: user?.preferences });
 };
 exports.updatePreferences = updatePreferences;
+const getPreferences = async (req, res) => {
+    const user = await User_1.default.findById(req.user?._id).select('preferences');
+    res.json({ preferences: user?.preferences || { platforms: [], countries: [], categories: [] } });
+};
+exports.getPreferences = getPreferences;

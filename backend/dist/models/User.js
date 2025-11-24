@@ -9,6 +9,9 @@ const userSchema = new mongoose_1.default.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
+    role: { type: String, enum: ['user', 'admin', 'moderator'], default: 'user' },
+    status: { type: String, enum: ['active', 'inactive', 'blocked'], default: 'active' },
+    lastActive: { type: Date, default: Date.now },
     savedTrends: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: 'Trend' }],
     preferences: {
         platforms: [String],

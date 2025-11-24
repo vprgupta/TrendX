@@ -126,3 +126,50 @@ export const getActiveSession = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to get active session' });
   }
 };
+
+export const syncSession = async (req: AuthRequest, res: Response) => {
+  try {
+    const { platform } = req.body;
+    
+    let session = await UserSession.findOne({ 
+      userId: req.user?._id,
+      isActive: true 
+    });
+
+    if (!session) {
+      const sessionId = uuidv4();
+      session = await UserSession.create({
+        userId: req.user?._id,
+        sessionId,
+        platform,
+        deviceInfo: {
+          ip: req.ip,
+          userAgent: req.get('User-Agent')
+        }
+      });
+    }
+
+    res.json({ 
+      sessionId: session.sessionId,
+      platform: session.platform,
+      startTime: session.startTime
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync session' });
+  }
+};
+
+export const switchPlatform = async (req: AuthRequest, res: Response) => {
+  try {
+    const { sessionId, newPlatform } = req.body;
+    
+    await UserSession.findOneAndUpdate(
+      { sessionId, userId: req.user?._id, isActive: true },
+      { platform: newPlatform }
+    );
+
+    res.json({ message: 'Platform switched' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to switch platform' });
+  }
+};

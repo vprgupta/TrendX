@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/ai_explainer_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AIExplanationScreen extends StatefulWidget {
   final String title;
@@ -7,6 +8,7 @@ class AIExplanationScreen extends StatefulWidget {
   final String platform;
   final String userAvatarUrl;
   final String userName;
+  final String? sourceUrl;
 
   const AIExplanationScreen({
     super.key,
@@ -15,6 +17,7 @@ class AIExplanationScreen extends StatefulWidget {
     required this.platform,
     required this.userAvatarUrl,
     required this.userName,
+    this.sourceUrl,
   });
 
   @override
@@ -362,7 +365,32 @@ class _AIExplanationScreenState extends State<AIExplanationScreen>
                 children: _categories.map((category) => _buildAnalysisContainer(category)).toList(),
               ),
             
-
+            if (widget.sourceUrl != null) ...[
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    final Uri url = Uri.parse(widget.sourceUrl!);
+                    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Could not launch ${widget.sourceUrl}')),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Read Full Article'),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'trendx_logo.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -8,20 +9,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return AppBar(
       title: showLogo 
-        ? Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/logo/appicon.png',
-                height: 32,
-                width: 32,
-              ),
-              const SizedBox(width: 8),
-              Text(title),
-            ],
-          )
+        ? TrendXLogo(isDark: isDark)
         : Text(title),
     );
   }

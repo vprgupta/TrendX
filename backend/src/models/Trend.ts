@@ -11,6 +11,9 @@ const trendSchema = new mongoose.Schema({
   mediaUrl: String,
   externalUrl: String,
   rank: Number,
+  sentiment: { type: String, enum: ['positive', 'negative', 'neutral'], default: 'neutral' },
+  status: { type: String, enum: ['active', 'inactive', 'pending'], default: 'active' },
+  isActive: { type: Boolean, default: true },
   metrics: {
     views: { type: Number, default: 0 },
     likes: { type: Number, default: 0 },

@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import 'express-async-errors';
 import authRoutes from './routes/auth';
 import trendRoutes from './routes/trends';
@@ -16,7 +18,29 @@ import { connectDB } from './config/database';
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: { origin: '*', methods: ['GET', 'POST'] }
+});
+
+// Extend Request interface
+declare global {
+  namespace Express {
+    interface Request {
+      io?: Server;
+    }
+  }
+}
+
+// Middleware to pass io to routes
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
 const PORT = process.env.PORT || 3000;
+
+// Make io available globally
+app.set('io', io);
 
 // Security middleware
 app.use(helmet());
@@ -39,16 +63,55 @@ const authLimiter = rateLimit({
 app.use('/api/', generalLimiter);
 app.use('/api/auth/', authLimiter);
 
+// Serve static files (HTML dashboards)
+app.use(express.static(path.join(__dirname, '..')));
+
+import analyticsRoutes from './routes/analyticsRoutes';
+import integrationRoutes from './routes/integrationRoutes';
+
+import * as newsController from './controllers/newsController';
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/trends', trendRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/integrations', integrationRoutes);
 
-// Serve dashboard
+// News Route
+app.get('/api/news/:category', newsController.getNewsByCategory);
+
+// Serve dashboard (with optional auth)
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, '../admin-dashboard-with-sidebar.html'));
+  // TODO: Add authentication check if DASHBOARD_AUTH=true
+  res.sendFile(path.join(__dirname, '../admin-dashboard-csp-fixed.html'));
+});
+
+// API Documentation endpoint
+app.get('/api/docs', (req, res) => {
+  res.json({
+    version: '1.0.0',
+    title: 'TrendX API Documentation',
+    endpoints: {
+      auth: {
+        'POST /api/auth/login': 'User login',
+        'POST /api/auth/register': 'User registration',
+        'POST /api/auth/logout': 'User logout'
+      },
+      trends: {
+        'GET /api/trends': 'Get all trends',
+        'GET /api/trends/:platform': 'Get platform trends',
+        'POST /api/trends': 'Create trend'
+      },
+      admin: {
+        'GET /api/admin/stats': 'Dashboard statistics',
+        'GET /api/admin/users': 'User management',
+        'GET /api/admin/analytics': 'Analytics data'
+      }
+    }
+  });
 });
 
 // Health check
@@ -59,12 +122,26 @@ app.get('/api/health', (req, res) => {
 // Error handler
 app.use(errorHandler);
 
+import { initializeScheduler } from './jobs/trendScheduler';
+
 // Start server
 const startServer = async () => {
   await connectDB();
-  app.listen(PORT, () => {
+
+  // Initialize background jobs
+  initializeScheduler();
+
+  server.listen(PORT, () => {
     console.log(`🚀 TrendX Backend running on port ${PORT}`);
   });
 };
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
 
 startServer();

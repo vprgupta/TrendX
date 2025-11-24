@@ -37,15 +37,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const auth_1 = require("../middleware/auth");
 const userController = __importStar(require("../controllers/userController"));
+const auth_1 = require("../middleware/auth");
 const router = express_1.default.Router();
-router.get('/profile', auth_1.authenticate, userController.getProfile);
-router.put('/profile', auth_1.authenticate, userController.updateProfile);
-router.get('/stats', auth_1.authenticate, userController.getStats);
-router.get('/saved-trends', auth_1.authenticate, userController.getSavedTrends);
-router.post('/saved-trends', auth_1.authenticate, userController.saveTrend);
-router.delete('/saved-trends/:id', auth_1.authenticate, userController.removeSavedTrend);
-router.get('/preferences', auth_1.authenticate, userController.getPreferences);
-router.put('/preferences', auth_1.authenticate, userController.updatePreferences);
+// All user routes require authentication
+router.use(auth_1.authenticate);
+router.get('/profile', userController.getProfile);
+router.put('/profile', userController.updateProfile);
+router.get('/saved-trends', userController.getSavedTrends);
+router.post('/saved-trends/:trendId', userController.saveTrend);
+router.delete('/saved-trends/:trendId', userController.unsaveTrend);
+router.post('/interactions', userController.trackInteraction);
+router.get('/preferences', userController.getPreferences);
+router.put('/preferences', userController.updatePreferences);
 exports.default = router;

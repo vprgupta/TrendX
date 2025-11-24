@@ -80,6 +80,32 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  // Bypass login with dummy data for testing
+  Future<bool> bypassLogin() async {
+    _setLoading(true);
+    _clearError();
+    
+    try {
+      await Future.delayed(const Duration(milliseconds: 300));
+      
+      _currentUser = User(
+        id: 'demo-123',
+        name: 'Demo User',
+        email: 'demo@trendx.com',
+        createdAt: DateTime.now(),
+        isEmailVerified: true,
+      );
+      
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError('Bypass login failed.');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> logout() async {
     await _authService.logout();
     _currentUser = null;

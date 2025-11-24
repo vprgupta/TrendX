@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'config/theme.dart';
 import 'features/auth/view/auth_wrapper.dart';
 import 'core/services/saved_trends_service.dart';
+import 'core/services/theme_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,12 +19,27 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.system;
+  final ThemeService _themeService = ThemeService();
 
-  void _toggleTheme() {
-    setState(() {
-      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _themeService.addListener(_onThemeChanged);
+    _loadServices();
+  }
+
+  Future<void> _loadServices() async {
+    await _themeService.loadTheme();
+  }
+
+  @override
+  void dispose() {
+    _themeService.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
   }
 
   @override
@@ -33,9 +49,9 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: _themeMode,
+      themeMode: _themeService.themeMode,
       home: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: _themeMode == ThemeMode.dark
+        value: _themeService.isDarkMode
             ? SystemUiOverlayStyle.light.copyWith(
                 statusBarColor: Colors.transparent,
                 statusBarIconBrightness: Brightness.light,
@@ -44,7 +60,10 @@ class _MyAppState extends State<MyApp> {
                 statusBarColor: Colors.transparent,
                 statusBarIconBrightness: Brightness.dark,
               ),
-        child: AuthWrapper(onThemeToggle: _toggleTheme, isDarkMode: _themeMode == ThemeMode.dark),
+        child: AuthWrapper(
+          onThemeToggle: _themeService.toggleTheme,
+          isDarkMode: _themeService.isDarkMode,
+        ),
       ),
     );
   }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/shimmer_card.dart';
+import '../../../core/widgets/news_feed.dart';
+import '../../../core/widgets/empty_state_widget.dart';
+import '../../../core/models/news_item.dart';
+import '../../../core/services/news_service.dart';
 import '../../../core/services/preferences_service.dart';
-import '../controller/technology_controller.dart';
-import '../model/technology.dart';
-import 'widgets/tech_trend_card.dart';
 
 class TechnologyScreen extends StatefulWidget {
   const TechnologyScreen({super.key});
@@ -13,13 +14,25 @@ class TechnologyScreen extends StatefulWidget {
 }
 
 class _TechnologyScreenState extends State<TechnologyScreen> {
-  final TechnologyController _controller = TechnologyController();
+  final NewsService _newsService = NewsService();
   final PreferencesService _prefsService = PreferencesService();
+
+  final Map<String, String> _categoryIcons = {
+    'AI': '🤖',
+    'Mobile': '📱',
+    'Web': '🌐',
+    'Blockchain': '⛓️',
+    'IoT': '📡',
+    'Robotics': '🦾',
+    'Cloud': '☁️',
+    'Cybersecurity': '🔒',
+  };
 
   @override
   void initState() {
     super.initState();
     _prefsService.addListener(_onPreferencesChanged);
+    _prefsService.loadFromBackend();
   }
 
   @override
@@ -34,72 +47,53 @@ class _TechnologyScreenState extends State<TechnologyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: Text(
-          'Technology Trends',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 0,
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.only(top: 8),
-        itemCount: _prefsService.selectedTechCategories.length,
-        itemBuilder: (context, index) {
-          final category = _prefsService.selectedTechCategories.elementAt(index);
-          return Column(
-            children: [
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  category,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              FutureBuilder<List<TechTrend>>(
-                future: _controller.getTechTrends(category),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Column(
-                      children: List.generate(2, (index) => const ShimmerCard(hasImage: false)),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Error: \${snapshot.error}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
+    return _prefsService.selectedTechCategories.isEmpty
+          ? EmptyStateWidget(
+              title: 'No Categories Selected',
+              message: 'Please select technology categories in the settings to see relevant news.',
+              icon: Icons.category_outlined,
+              actionLabel: 'Customize Feed',
+              onAction: () {
+                // TODO: Navigate to settings or show preference dialog
+              },
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _prefsService.selectedTechCategories.length,
+              itemBuilder: (context, index) {
+                final category = _prefsService.selectedTechCategories.elementAt(index);
+                final icon = _categoryIcons[category] ?? '💻';
+                final displayName = '$icon $category';
+                
+                return FutureBuilder<List<NewsItem>>(
+                  future: _newsService.getNews('technology'),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Column(
+                        children: List.generate(3, (index) => const ShimmerCard()),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Error: ${snapshot.error}',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                         ),
-                      ),
+                      );
+                    }
+                    
+                    // Show all tech news for each selected category
+                    final allNews = snapshot.data ?? [];
+                    
+                    return NewsFeed(
+                      categoryName: displayName,
+                      newsItems: allNews,
                     );
-                  }
-                  return Column(
-                    children: (snapshot.data ?? [])
-                        .map((trend) => TechTrendCard(trend: trend))
-                        .toList(),
-                  );
-                },
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                  },
+                );
+              },
+            );
   }
 }

@@ -6,11 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyToken = exports.generateToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 const generateToken = (userId) => {
-    const options = {
-        expiresIn: process.env.JWT_EXPIRE || '7d'
-    };
-    return jsonwebtoken_1.default.sign({ userId }, JWT_SECRET, options);
+    return jsonwebtoken_1.default.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
 };
 exports.generateToken = generateToken;
 const verifyToken = (token) => {

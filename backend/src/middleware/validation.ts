@@ -2,6 +2,8 @@ import Joi from 'joi';
 import { Request, Response, NextFunction } from 'express';
 
 export const validateRegister = (req: Request, res: Response, next: NextFunction) => {
+  console.log('🔍 Validating registration request. Body:', JSON.stringify(req.body, null, 2));
+
   const schema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
@@ -10,8 +12,10 @@ export const validateRegister = (req: Request, res: Response, next: NextFunction
 
   const { error } = schema.validate(req.body);
   if (error) {
+    console.log('❌ Validation failed:', error.details[0].message);
     return res.status(400).json({ error: error.details[0].message });
   }
+  console.log('✅ Validation passed');
   next();
 };
 

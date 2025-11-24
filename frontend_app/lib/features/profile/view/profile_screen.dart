@@ -150,10 +150,10 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             ),
             const SizedBox(height: 16),
             Text(
-              'John Doe',
+              _authController.currentUser?.name ?? 'Guest User',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: 6),
             Container(
@@ -163,11 +163,11 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                'Trend Explorer',
+                _authController.currentUser?.email ?? 'Sign in to see profile',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.w500,
-                ),
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             ),
           ],

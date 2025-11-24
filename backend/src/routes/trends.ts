@@ -12,5 +12,7 @@ router.get('/country/:country', trendController.getTrendsByCountry);
 router.get('/category/:category', trendController.getTrendsByCategory);
 router.get('/:id', trendController.getTrendById);
 router.post('/', authenticate, validateTrend, trendController.createTrend);
+router.put('/:id', authenticate, validateTrend, trendController.updateTrend);
+router.delete('/:id', authenticate, trendController.deleteTrend);
 
 export default router;

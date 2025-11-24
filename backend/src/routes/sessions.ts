@@ -11,5 +11,7 @@ router.post('/start', sessionController.startSession);
 router.put('/activity', sessionController.updateSessionActivity);
 router.post('/end', sessionController.endSession);
 router.get('/active', sessionController.getActiveSession);
+router.post('/sync', sessionController.syncSession);
+router.put('/switch', sessionController.switchPlatform);
 
 export default router;

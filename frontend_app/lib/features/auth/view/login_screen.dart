@@ -182,6 +182,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
+                
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 16),
+                
+                // Bypass Login Button
+                OutlinedButton.icon(
+                  onPressed: _handleBypassLogin,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.developer_mode, size: 20),
+                  label: const Text('Skip Login (Demo Mode)'),
+                ),
               ],
             ),
           ),
@@ -200,6 +217,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success && mounted) {
         Navigator.of(context).pushReplacementNamed('/');
       }
+    }
+  }
+
+  Future<void> _handleBypassLogin() async {
+    final success = await _authController.bypassLogin();
+    
+    if (success && mounted) {
+      Navigator.of(context).pushReplacementNamed('/');
     }
   }
 }

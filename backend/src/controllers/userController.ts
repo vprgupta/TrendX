@@ -69,3 +69,26 @@ export const trackInteraction = async (req: AuthRequest, res: Response) => {
 
   res.json({ message: 'Interaction tracked' });
 };
+
+export const updatePreferences = async (req: AuthRequest, res: Response) => {
+  const { platforms, countries, worldCategories, techCategories } = req.body;
+  
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    { 
+      preferences: {
+        platforms: platforms || [],
+        countries: countries || [],
+        categories: [...(worldCategories || []), ...(techCategories || [])]
+      }
+    },
+    { new: true }
+  ).select('-password');
+  
+  res.json({ message: 'Preferences updated', preferences: user?.preferences });
+};
+
+export const getPreferences = async (req: AuthRequest, res: Response) => {
+  const user = await User.findById(req.user?._id).select('preferences');
+  res.json({ preferences: user?.preferences || { platforms: [], countries: [], categories: [] } });
+};

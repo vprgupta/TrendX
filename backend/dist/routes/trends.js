@@ -38,6 +38,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const trendController = __importStar(require("../controllers/trendController"));
+const auth_1 = require("../middleware/auth");
+const validation_1 = require("../middleware/validation");
 const router = express_1.default.Router();
 router.get('/', trendController.getTrends);
 router.get('/search', trendController.searchTrends);
@@ -45,5 +47,6 @@ router.get('/platform/:platform', trendController.getTrendsByPlatform);
 router.get('/country/:country', trendController.getTrendsByCountry);
 router.get('/category/:category', trendController.getTrendsByCategory);
 router.get('/:id', trendController.getTrendById);
-router.post('/', trendController.createTrend);
+router.post('/', auth_1.authenticate, validation_1.validateTrend, trendController.createTrend);
+router.delete('/:id', trendController.deleteTrend);
 exports.default = router;
