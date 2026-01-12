@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../home/view/home_screen.dart';
 import '../platform/view/platform_screen.dart';
 import '../country/view/country_screen.dart';
@@ -65,6 +66,9 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
 
   void _onNavItemTapped(int index) {
     if (_currentIndex != index) {
+      // Haptic Feedback for premium feel
+      HapticFeedback.lightImpact();
+
       if (index == 2) { // Adjusted index for Reels check if needed
          // Reels might need full screen
       }

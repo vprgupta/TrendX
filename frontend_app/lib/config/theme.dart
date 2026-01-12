@@ -8,7 +8,7 @@ class AppTheme {
   static const Color neonRed = Color(0xFFFF003C);
   
   // Background Colors
-  static const Color midnightBlue = Color(0xFF0A0E17);
+  static const Color midnightBlue = Color(0xFF020408); // Deepened black-blue
   static const Color surfaceBlue = Color(0xFF1D2333);
   static const Color deepSpace = Color(0xFF0F172A);
 

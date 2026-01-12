@@ -58,7 +58,7 @@ class _TechnologyScreenState extends State<TechnologyScreen> {
               },
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
               itemCount: _prefsService.selectedTechCategories.length,
               itemBuilder: (context, index) {
                 final category = _prefsService.selectedTechCategories.elementAt(index);

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/ui/glass_container.dart';
+import '../../../../core/ui/section_header.dart';
 import '../../model/platform.dart';
 import 'trend_card.dart';
 
@@ -16,66 +18,20 @@ class PlatformFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                _getPlatformColor(platformName).withValues(alpha: 0.8),
-                _getPlatformColor(platformName).withValues(alpha: 0.6),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: _getPlatformColor(platformName).withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  _getPlatformIcon(platformName),
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                platformName,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      offset: const Offset(0, 1),
-                      blurRadius: 2,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        // Platform Header
+        // Platform Header
+        SectionHeader(
+          title: platformName,
+          icon: _getPlatformIcon(platformName),
+          color: _getPlatformColor(platformName),
         ),
-        ...trends.map((trend) => TrendCard(trend: trend)),
+        
+        // Trends with Spacing
+        ...trends.map((trend) => Padding(
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+          child: TrendCard(trend: trend),
+        )),
+        
         const SizedBox(height: 8),
       ],
     );

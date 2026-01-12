@@ -50,19 +50,8 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
     final colorScheme = Theme.of(context).colorScheme;
     
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colorScheme.primaryContainer.withOpacity(0.1),
-              colorScheme.surface,
-              colorScheme.secondaryContainer.withOpacity(0.1),
-            ],
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: Colors.transparent, // Ensure transparency for global background
+      body: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: SlideTransition(
@@ -84,7 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
             ),
           ),
         ),
-      ),
+
     );
   }
 

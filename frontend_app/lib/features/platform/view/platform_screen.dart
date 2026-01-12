@@ -59,12 +59,12 @@ class _PlatformScreenState extends State<PlatformScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      // backgroundColor: Theme.of(context).colorScheme.surface, // Removed to match theme scaffold background
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(70),
         child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
+          decoration: const BoxDecoration(
+            color: Colors.transparent, // Transparent to show scaffold background
           ),
           child: SafeArea(
             child: Padding(
@@ -105,7 +105,7 @@ class _PlatformScreenState extends State<PlatformScreen> {
         ),
       ),
       body: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 16),
               itemCount: _prefsService.selectedPlatforms.length,
               itemBuilder: (context, index) {
                 final platform = _prefsService.selectedPlatforms.elementAt(index);

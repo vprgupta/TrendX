@@ -19,10 +19,8 @@ class HomeScreen extends StatelessWidget {
         child: GlassContainer(
           borderRadius: BorderRadius.zero,
           blur: 10,
-          opacity: 0.1,
-          border: const Border(
-            bottom: BorderSide(color: Colors.white12, width: 0.5),
-          ),
+          opacity: 0, // Fully transparent tint to match background
+          border: null, // Remove border to blend seamlessly
           child: AppBar(
             backgroundColor: Colors.transparent,
             title: NeonText(
