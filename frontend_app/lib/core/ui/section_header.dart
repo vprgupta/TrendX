@@ -15,6 +15,8 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
       child: Row(
@@ -36,16 +38,18 @@ class SectionHeader extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           
-          // Title
+          // Title - Adaptive color
           Text(
             title.toUpperCase(),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
-              color: Colors.white.withOpacity(0.9),
+              color: isDark 
+                  ? Colors.white.withOpacity(0.9)
+                  : color.withOpacity(0.9), // Use platform color in light mode
               shadows: [
                 Shadow(
-                  color: color.withOpacity(0.5),
+                  color: color.withOpacity(isDark ? 0.5 : 0.3),
                   blurRadius: 8,
                 ),
               ],
@@ -54,15 +58,15 @@ class SectionHeader extends StatelessWidget {
           
           const SizedBox(width: 16),
           
-          // Divider Line with Fade
+          // Divider Line with Fade - Adaptive opacity
           Expanded(
             child: Container(
               height: 1,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    color.withOpacity(0.5),
-                    color.withOpacity(0.1),
+                    color.withOpacity(isDark ? 0.5 : 0.4),
+                    color.withOpacity(isDark ? 0.1 : 0.2),
                     Colors.transparent,
                   ],
                 ),

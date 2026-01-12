@@ -5,6 +5,8 @@ import '../../../core/widgets/empty_state_widget.dart';
 import '../../../core/models/news_item.dart';
 import '../../../core/services/news_service.dart';
 import '../../../core/services/preferences_service.dart';
+import '../../../core/ui/neon_text.dart';
+import '../../../core/ui/glass_container.dart';
 
 class TechnologyScreen extends StatefulWidget {
   const TechnologyScreen({super.key});
@@ -47,7 +49,25 @@ class _TechnologyScreenState extends State<TechnologyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return _prefsService.selectedTechCategories.isEmpty
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Technology',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: _prefsService.selectedTechCategories.isEmpty
           ? EmptyStateWidget(
               title: 'No Categories Selected',
               message: 'Please select technology categories in the settings to see relevant news.',
@@ -94,6 +114,7 @@ class _TechnologyScreenState extends State<TechnologyScreen> {
                   },
                 );
               },
-            );
+            ),
+    );
   }
 }

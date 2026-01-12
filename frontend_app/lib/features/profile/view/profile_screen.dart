@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'preferences_screen.dart';
 import 'saved_trends_screen.dart';
+import 'edit_profile_screen.dart';
 import '../../auth/controller/auth_controller.dart';
+import '../../../core/services/profile_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback onThemeToggle;
@@ -19,13 +23,20 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateMixin {
   final _authController = AuthController();
+  final _profileService = ProfileService();
+  final _imagePicker = ImagePicker();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  
+  String? _profileName;
+  String? _profileBio;
+  String? _avatarPath;
 
   @override
   void initState() {
     super.initState();
+    _loadProfileData();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -37,6 +48,21 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
       CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
     _animationController.forward();
+  }
+  
+  Future<void> _loadProfileData() async {
+    _profileName = await _profileService.getName();
+    _profileBio = await _profileService.getBio();
+    _avatarPath = await _profileService.getAvatarPath();
+    if (mounted) setState(() {});
+  }
+  
+  Future<void> _pickImage() async {
+    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      await _profileService.saveAvatarPath(pickedFile.path);
+      setState(() => _avatarPath = pickedFile.path);
+    }
   }
 
   @override
@@ -93,75 +119,95 @@ class _ProfileScreenState extends State<ProfileScreen> with TickerProviderStateM
   }
 
   Widget _buildProfileHeader(BuildContext context, ColorScheme colorScheme) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.08),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.7)],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.25),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+    return Column(
+      children: [
+        // Avatar with tap to select image
+        GestureDetector(
+          onTap: _pickImage,
+          child: Stack(
+            children: [
+              CircleAvatar(
+                radius: 60,
+                backgroundColor: colorScheme.primary.withOpacity(0.1),
+                backgroundImage: _avatarPath != null ? FileImage(File(_avatarPath!)) : null,
+                child: _avatarPath == null
+                    ? Icon(
+                        Icons.person,
+                        size: 60,
+                        color: colorScheme.primary,
+                      )
+                    : null,
               ),
-              child: CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.transparent,
-                child: Icon(
-                  Icons.person,
-                  size: 50,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _authController.currentUser?.name ?? 'Guest User',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                _authController.currentUser?.email ?? 'Sign in to see profile',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w500,
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: colorScheme.surface,
+                      width: 3,
                     ),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+        const SizedBox(height: 20),
+        
+        // Username
+        Text(
+          _profileName ?? _authController.currentUser?.name ?? 'Guest User',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        
+        // Bio
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            _profileBio ?? 'Tap Edit Profile to add your bio',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // Edit Profile Button
+        OutlinedButton.icon(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EditProfileScreen(),
+              ),
+            );
+            if (result == true) {
+              _loadProfileData(); // Reload data after edit
+            }
+          },
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Edit Profile'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
