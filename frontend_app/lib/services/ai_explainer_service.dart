@@ -6,14 +6,24 @@ class AIExplainerService {
   static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
 
   Future<String> explainTrend(String title, String content, String platform, [String language = 'English']) async {
-    print('Analyzing: Title="$title", Content="$content", Platform="$platform"'); // Debug
+    print('🔍 Starting AI Explanation Request');
+    print('📝 Title: $title');
+    print('📄 Content: ${content.substring(0, content.length > 50 ? 50 : content.length)}...');
+    print('🌐 Platform: $platform');
+    print('🗣️ Language: $language');
+    print('🔑 API Key exists: ${Secrets.geminiApiKey.isNotEmpty}');
     
     try {
+      print('⏳ Calling Gemini API...');
       final result = await _explainWithGemini(title, content, platform, language);
-      print('Gemini API Success: ${result.substring(0, result.length > 100 ? 100 : result.length)}...'); // Debug
+      print('✅ Gemini API Success!');
+      print('📤 Response Preview: ${result.substring(0, result.length > 100 ? 100 : result.length)}...');
       return result;
     } catch (e) {
-      print('Gemini API failed, using fallback: $e');
+      print('❌ Gemini API Failed!');
+      print('🚨 Error Type: ${e.runtimeType}');
+      print('🚨 Error Message: $e');
+      print('🔄 Using fallback explanation');
       return _getFallbackExplanation(title, content, platform, language);
     }
   }
@@ -26,11 +36,11 @@ class AIExplainerService {
         body: json.encode({
           'contents': [{
             'parts': [{
-              'text': 'Analyze this $platform post using 5W+1H principle in $language language. Provide detailed explanations (2-3 sentences each). Format each point on new line:\n\nWHO: [who is involved - be specific about creators, influencers, or communities]\nWHAT: [what happened - describe the content and its significance]\nWHEN: [when it occurred - timing and context]\nWHERE: [where it\'s happening - platform, geographic reach]\nWHY: [why it\'s trending - detailed reasons for popularity]\nHOW: [how it\'s spreading - mechanisms of viral growth]\n\nTitle: "$title" Content: "$content"'
+              'text': 'Provide a concise explanation (60-70 words) in $language language about why this $platform post is trending. Focus on the key reasons, context, and significance. Make it clear and engaging.\n\nTitle: "$title"\nContent: "$content"'
             }]
           }],
           'generationConfig': {
-            'maxOutputTokens': 1000,
+            'maxOutputTokens': 150,
             'temperature': 0.7
           }
         }),
@@ -88,15 +98,7 @@ class AIExplainerService {
   }
 
   String _getFallbackExplanation(String title, String content, String platform, String language) {
-    // Create dynamic explanation based on actual content
-    final contentPreview = content.length > 50 ? '${content.substring(0, 50)}...' : content;
-    
-    return 'WHO: Content creators and users on $platform sharing trending material\n'
-           'WHAT: "$title" - $contentPreview This content has gained significant attention and engagement\n'
-           'WHEN: Recently posted and currently trending across the platform\n'
-           'WHERE: $platform platform with global reach and audience engagement\n'
-           'WHY: The content resonates with users due to its relevance, entertainment value, or informational content that meets current interests\n'
-           'HOW: Spreading through platform algorithms, user shares, likes, comments, and organic viral mechanisms';
+    return 'This trending $platform post "$title" has gained significant attention due to its relevance and engagement with users. The content resonates with current interests, spreading through platform algorithms, user shares, and viral mechanisms. It reflects timely topics that the community finds valuable and entertaining.';
   }
 
   String _detectLanguage() {

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../home/view/home_screen.dart';
 import '../platform/view/platform_screen.dart';
 import '../country/view/country_screen.dart';
-import '../world/view/world_screen.dart';
 import '../technology/view/technology_screen.dart';
 import '../profile/view/profile_screen.dart';
 import '../../screens/reels_screen.dart';
@@ -32,7 +30,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
 
   List<Widget> get _screens => [
     const PlatformScreen(),
-    const ReelsScreen(),
+    ReelsScreen(isActive: _currentIndex == 1), // Pass active state
     const CountryScreen(),
     const TechnologyScreen(),
     ProfileScreen(onThemeToggle: widget.onThemeToggle, isDarkMode: widget.isDarkMode),
@@ -40,7 +38,7 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
 
   final List<NavItem> _navItems = [
     NavItem(LucideIcons.layoutGrid, 'Platform', AppTheme.cyan),
-    NavItem(LucideIcons.clapperboard, 'Shorts', AppTheme.violet),
+    NavItem(LucideIcons.play, 'Shorts', AppTheme.violet),
     NavItem(LucideIcons.flag, 'Country', Colors.green),
     NavItem(LucideIcons.monitor, 'Tech', Colors.orange), 
     NavItem(LucideIcons.user, 'Profile', AppTheme.neonRed),
@@ -86,78 +84,81 @@ class _MainNavigationState extends State<MainNavigation> with TickerProviderStat
     return Scaffold(
       extendBody: true, // Allow body to extend behind the fab/bottom bar
       resizeToAvoidBottomInset: false,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-        bottomNavigationBar: GlassContainer(
-          height: 85,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          margin: const EdgeInsets.only(top: 10),
-          opacity: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.9,
-          color: Theme.of(context).brightness == Brightness.dark ? null : Colors.white,
-          blur: 20,
-        child: SingleChildScrollView( // Added scroll to prevent overflow with 7 items
-          scrollDirection: Axis.horizontal,
-          child: Container(
-             padding: const EdgeInsets.symmetric(horizontal: 10),
-             width: MediaQuery.of(context).size.width,
-             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(_navItems.length, (index) {
-                final item = _navItems[index];
-                final isSelected = _currentIndex == index;
-                
-                return GestureDetector(
-                  onTap: () => _onNavItemTapped(index),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                         AnimatedContainer(
-                           duration: const Duration(milliseconds: 300),
-                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), // Wider capsule
-                           decoration: BoxDecoration(
-                             color: isSelected ? item.color.withOpacity(0.2) : Colors.transparent,
-                             borderRadius: BorderRadius.circular(20), // Pill shape
-                            border: isSelected ? Border.all(color: item.color.withOpacity(0.3), width: 1) : null,
-                           ),
-                           child: Icon(
-                             item.icon,
-                             // Keep icon color neutral but high contrast for premium feel
-                             color: Theme.of(context).brightness == Brightness.dark 
-                                 ? (isSelected ? Colors.white : Colors.white60)
-                                 : (isSelected ? Colors.black : Colors.black54),
-                             size: 26, // Slightly bigger
-                           ),
-                         ),
-                         const SizedBox(height: 4),
-                         AnimatedOpacity(
-                           duration: const Duration(milliseconds: 200),
-                           opacity: isSelected ? 1.0 : 0.6,
-                           child: Text(
-                             item.label,
-                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                               fontSize: 11,
-                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                               color: Theme.of(context).brightness == Brightness.dark 
-                                   ? Colors.white 
-                                   : Colors.black,
-                             ),
-                           ),
-                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
+      body: SafeArea(
+        bottom: false, // We'll handle bottom padding manually
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 96), // 80 (navbar height) + 16 (bottom padding)
+          child: IndexedStack(
+            index: _currentIndex,
+            children: _screens,
           ),
         ),
       ),
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.only(bottom: 16, left: 12, right: 12),
+          child: GlassContainer(
+            height: 80,
+            borderRadius: BorderRadius.circular(24), // Full rounded corners for floating effect
+            opacity: Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.9,
+            color: Theme.of(context).brightness == Brightness.dark ? null : Colors.white,
+            blur: 20,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(_navItems.length, (index) {
+                  final item = _navItems[index];
+                  final isSelected = _currentIndex == index;
+                  
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => _onNavItemTapped(index),
+                      behavior: HitTestBehavior.opaque,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.all(9),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppTheme.cyan.withOpacity(0.2) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(20), // Pill shape
+                              border: isSelected ? Border.all(color: AppTheme.cyan.withOpacity(0.3), width: 1) : null,
+                            ),
+                            child: Icon(
+                              item.icon,
+                              // Keep icon color neutral but high contrast for premium feel
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? (isSelected ? Colors.white : Colors.white60)
+                                  : (isSelected ? Colors.black : Colors.black54),
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: isSelected ? 1.0 : 0.6,
+                            child: Text(
+                              item.label,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontSize: 10,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                    ? Colors.white 
+                                    : Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ),
     );
   }
 }
@@ -169,3 +170,4 @@ class NavItem {
 
   NavItem(this.icon, this.label, this.color);
 }
+
